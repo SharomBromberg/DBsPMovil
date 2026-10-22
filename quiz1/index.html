@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Desafío Móvil: El Arquitecto de Datos Offline</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-sky-500 selection:text-white">
+
+  <!-- Header -->
+  <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
+    <div class="flex items-center space-x-3">
+      <div class="bg-sky-500/10 border border-sky-500/30 p-2.5 rounded-xl text-sky-400">
+        <i class="fa-solid fa-database text-xl"></i>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold text-white tracking-tight">Desafío Móvil: Arquitecto Offline</h1>
+        <p class="text-xs text-slate-400">Módulo 1 • Bases de Datos para Apps Móviles</p>
+      </div>
+    </div>
+    <div class="flex items-center space-x-4">
+      <div class="bg-slate-800/80 border border-slate-700 px-4 py-2 rounded-xl flex items-center space-x-2">
+        <i class="fa-solid fa-battery-three-quarters text-emerald-400"></i>
+        <span class="text-xs font-semibold uppercase tracking-wider text-slate-300">Batería App: <span id="battery-level" class="text-emerald-400 font-bold">100%</span></span>
+      </div>
+      <div class="bg-sky-500/10 border border-sky-500/30 px-4 py-2 rounded-xl flex items-center space-x-2">
+        <i class="fa-solid fa-star text-amber-400"></i>
+        <span class="text-sm font-bold text-sky-300"><span id="score-display">0</span> Puntos</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="max-w-4xl w-full mx-auto p-6 my-auto">
+    
+    <!-- Intro Screen -->
+    <div id="intro-screen" class="bg-slate-900 border border-slate-800 rounded-3xl p-8 md:p-12 text-center shadow-2xl relative overflow-hidden">
+      <div class="absolute -right-20 -top-20 w-64 h-64 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -left-20 -bottom-20 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="inline-flex p-4 bg-sky-500/10 border border-sky-500/20 text-sky-400 rounded-2xl text-3xl mb-6">
+        <i class="fa-solid fa-mobile-screen-button"></i>
+      </div>
+
+      <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-4">¡Salva la Experiencia del Usuario!</h2>
+      <p class="text-slate-400 text-base md:text-lg max-w-2xl mx-auto mb-8 leading-relaxed">
+        Eres el Arquitecto de Software Principal de una app móvil de logística de última milla. Te enfrentarás a caídas de red, clientes exigentes, esquemas rígidos y conflictos de sincronización. ¡Toma las decisiones técnicas correctas!
+      </p>
+
+      <button onclick="startGame()" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-8 py-4 rounded-2xl shadow-lg shadow-sky-500/20 transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer text-base inline-flex items-center space-x-3">
+        <span>Comenzar Misión</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+
+    <!-- Game Screen (Hidden by default) -->
+    <div id="game-screen" class="hidden space-y-6">
+      
+      <!-- Progress & Scenario Info -->
+      <div class="flex justify-between items-center text-sm font-medium text-slate-400 px-2">
+        <span>Escenario <span id="current-scenario" class="text-sky-400 font-bold">1</span> de 5</span>
+        <span id="scenario-category" class="bg-slate-800 border border-slate-700 px-3 py-1 rounded-lg text-xs text-sky-300">Almacenamiento Local</span>
+      </div>
+
+      <!-- Scenario Card -->
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl">
+        <h3 id="scenario-title" class="text-xl md:text-2xl font-bold text-white mb-3">Título del escenario</h3>
+        <p id="scenario-description" class="text-slate-300 text-base leading-relaxed mb-6">Descripción detallada del reto técnico actual...</p>
+
+        <!-- Options Container -->
+        <div id="options-container" class="space-y-3">
+          <!-- Dynamically injected choices -->
+        </div>
+      </div>
+
+      <!-- Feedback Banner (Hidden by default) -->
+      <div id="feedback-card" class="hidden bg-slate-900 border rounded-2xl p-6 shadow-xl transition-all">
+        <div class="flex items-start space-x-4">
+          <div id="feedback-icon" class="text-2xl mt-1"></div>
+          <div class="flex-grow">
+            <h4 id="feedback-title" class="text-lg font-bold mb-1"></h4>
+            <p id="feedback-text" class="text-slate-300 text-sm leading-relaxed"></p>
+          </div>
+        </div>
+        <div class="mt-6 flex justify-end">
+          <button onclick="nextScenario()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-semibold px-6 py-2.5 rounded-xl transition cursor-pointer inline-flex items-center space-x-2">
+            <span>Siguiente Reto</span>
+            <i class="fa-solid fa-chevron-right text-xs"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Victory / Results Screen (Hidden by default) -->
+    <div id="results-screen" class="hidden bg-slate-900 border border-slate-800 rounded-3xl p-8 md:p-12 text-center shadow-2xl">
+      <div id="result-icon" class="text-5xl text-amber-400 mb-6">
+        <i class="fa-solid fa-trophy"></i>
+      </div>
+      <h2 id="result-title" class="text-3xl font-extrabold text-white mb-3">¡Misión Cumplida!</h2>
+      <p id="result-description" class="text-slate-300 text-base max-w-xl mx-auto mb-8 leading-relaxed">Has completado con éxito la evaluación arquitectónica del Módulo 1.</p>
+      
+      <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 max-w-sm mx-auto mb-8">
+        <div class="text-sm text-slate-400 mb-1">Puntuación Final</div>
+        <div class="text-4xl font-extrabold text-sky-400"><span id="final-score">0</span> <span class="text-lg text-slate-500">/ 500 pts</span></div>
+      </div>
+
+      <button onclick="restartGame()" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-8 py-3.5 rounded-2xl transition cursor-pointer inline-flex items-center space-x-2">
+        <i class="fa-solid fa-rotate-right"></i>
+        <span>Jugar de Nuevo</span>
+      </button>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center py-4 text-xs text-slate-500 border-t border-slate-900">
+    Desafío Educativo Interactivo • Módulo 1: Bases de Datos para Aplicaciones Móviles
+  </footer>
+
+  <!-- Game Logic Script -->
+  <script>
+    const scenarios = [
+      {
+        category: "Almacenamiento Local",
+        title: "Reto 1: El dilema del túnel y la conectividad",
+        description: "Tu aplicación de reparto funciona en una gran metrópoli donde los usuarios cruzan constantemente túneles y zonas sin señal de forma intermitente. ¿Qué estrategia de persistencia local eliges?",
+        options: [
+          {
+            text: "Depender al 100% de la nube. Si no hay red, la app simplemente mostrará un error de conexión.",
+            isCorrect: false,
+            feedbackTitle: "¡Error crítico de resiliencia!",
+            feedbackText: "Depender exclusivamente de la nube deja la app inoperativa ante cualquier corte de red en el metro o túneles. Para eso requerimos almacenamiento local."
+          },
+          {
+            text: "Implementar caché de datos local temporal para amortiguar breves interrupciones de red.",
+            isCorrect: true,
+            feedbackTitle: "¡Excelente decisión técnica!",
+            feedbackText: "Correcto. El almacenamiento en caché local temporal es ideal para áreas metropolitanas con interrupciones breves, manteniendo operaciones en cola hasta restablecer conexión."
+          },
+          {
+            text: "Crear una base de datos distribuida peer-to-peer por Bluetooth obligatoria para todos los repartidores.",
+            isCorrect: false,
+            feedbackTitle: "Solución sobredimensionada",
+            feedbackText: "Las redes P2P son útiles para casos muy específicos de aislamiento total (como barcos o minas), pero representan complejidad excesiva para interrupciones urbanas breves."
+          }
+        ]
+      },
+      {
+        category: "Flexibilidad de Esquema",
+        title: "Reto 2: Evolución ágil sin migraciones pesadas",
+        description: "Debes lanzar una nueva versión de tu app que añade un campo dinámico de 'Redes Sociales' al perfil del usuario. No controlas cuándo actualizarán todos los clientes. ¿Qué modelo de base de datos eliges?",
+        options: [
+          {
+            text: "Modelo relacional con un esquema estático (SQL), forzando migraciones complejas de tablas en el arranque.",
+            isCorrect: false,
+            feedbackTitle: "Riesgo de migración fallida",
+            feedbackText: "Las bases de datos relacionales con esquema estático exigen actualizar toda la estructura, lo que puede romper la app si los usuarios tardan en actualizar."
+          },
+          {
+            text: "Modelo NoSQL orientado a documentos JSON, permitiendo añadir atributos bajo demanda sin migraciones.",
+            isCorrect: true,
+            feedbackTitle: "¡Arquitectura ágil ganadora!",
+            feedbackText: "¡Exacto! El modelo NoSQL basado en documentos JSON permite evolucionar los atributos bajo demanda de forma fluida, eliminando costosas migraciones de esquemas."
+          },
+          {
+            text: "Guardar todo el perfil de usuario comprimido en un archivo de texto plano plano plano.",
+            isCorrect: false,
+            feedbackTitle: "Pérdida de consultas estructuradas",
+            feedbackText: "Los archivos de texto plano carecen de índices, consultas rápidas (SQL o API de consultas) y transacciones seguras requeridas a escala empresarial."
+          }
+        ]
+      },
+      {
+        category: "Sincronización de Datos",
+        title: "Reto 3: Ahorro de datos móviles y ancho de banda",
+        description: "Los repartidores usan planes de datos móviles costosos. Al sincronizar con la nube, ¿cómo debes configurar la estrategia de replicación?",
+        options: [
+          {
+            text: "Replicar toda la base de datos completa de la empresa en cada sincronización automática.",
+            isCorrect: false,
+            feedbackTitle: "¡Colapso de red y costos elevados!",
+            feedbackText: "Sincronizar todo el conjunto de datos agota el plan de datos móviles del usuario y genera latencia extrema y costos innecesarios en la nube."
+          },
+          {
+            text: "Sincronizar inteligente y selectivamente solo los subconjuntos de datos que han cambiado mediante filtrado.",
+            isCorrect: true,
+            feedbackTitle: "¡Optimización perfecta!",
+            feedbackText: "Correcto. La sincronización inteligente de diferencias (deltas) y el filtrado por ID de sucursal o región optimizan drásticamente el ancho de banda."
+          },
+          {
+            text: "Desactivar por completo la sincronización automática y exigir sincronización manual nocturna.",
+            isCorrect: false,
+            feedbackTitle: "Experiencia de usuario deficiente",
+            feedbackText: "Obligar a sincronizaciones manuales nocturnas deja los datos obsoletos durante todo el día laboral, aumentando el riesgo de errores operativos."
+          }
+        ]
+      },
+      {
+        category: "Seguridad y Gobernanza",
+        title: "Reto 4: Protección de datos en reposo y tránsito",
+        description: "Un auditor de seguridad exige cumplir con estándares estrictos para la información almacenada en los smartphones de la compañía en caso de pérdida o robo del dispositivo.",
+        options: [
+          {
+            text: "Confiar ciegamente en que el sistema operativo cifrará todo por defecto sin configurar la base de datos.",
+            isCorrect: false,
+            feedbackTitle: "Vulnerabilidad de seguridad grave",
+            feedbackText: "Nunca debes asumir que la capa de persistencia viene cifrada por defecto. Debes desarrollar asumiendo que no hay cifrado nativo automático activado."
+          },
+          {
+            text: "Implementar cifrado AES de 256 bits en la base de datos local y SSL/TLS para el tránsito.",
+            isCorrect: true,
+            feedbackTitle: "¡Blindaje de seguridad exitoso!",
+            feedbackText: "¡Perfecto! El uso de cifrado AES de 256 bits en reposo y TLS en tránsito garantiza la gobernanza y protección de los datos corporativos."
+          },
+          {
+            text: "Ocultar las carpetas de la base de datos en directorios ocultos del sistema operativo móvil.",
+            isCorrect: false,
+            feedbackTitle: "Falsa sensación de seguridad",
+            feedbackText: "Ocultar archivos no previene ataques de ingeniería inversa o extracción de datos en dispositivos roteados o con jailbreak."
+          }
+        ]
+      },
+      {
+        category: "Plataforma y Rendimiento",
+        title: "Reto 5: Optimización de recursos y batería",
+        description: "Detectas que la app drena la batería de los repartidores rápidamente debido a consultas pesadas ejecutándose de forma descontrolada.",
+        options: [
+          {
+            text: "Ejecutar todas las consultas masivas de JSON directamente en el hilo principal de la interfaz de usuario (UI thread).",
+            isCorrect: false,
+            feedbackTitle: "¡Congelación de interfaz (ANR)!",
+            feedbackText: "Ejecutar procesamiento pesado en el hilo UI bloquea la aplicación, congela la pantalla y genera cierres forzosos (ANR en Android)."
+          },
+          {
+            text: "Procesar consultas pesadas fuera del hilo UI y gestionar la frecuencia de sincronización para cuidar la batería.",
+            isCorrect: true,
+            feedbackTitle: "¡Maestría en rendimiento móvil!",
+            feedbackText: "¡Excelente! Aislar el procesamiento de datos fuera del hilo principal y controlar el uso de CPU y batería garantiza una app fluida y eficiente."
+          },
+          {
+            text: "Reducir la resolución gráfica de la interfaz de usuario para compensar el consumo del procesador de base de datos.",
+            isCorrect: false,
+            feedbackTitle: "Tratamiento incorrecto del síntoma",
+            feedbackText: "Reducir la calidad visual no soluciona el consumo excesivo de CPU y batería generado por un mal manejo de hilos en las consultas de datos."
+          }
+        ]
+      }
+    ];
+
+    let currentStep = 0;
+    let score = 0;
+    let battery = 100;
+
+    const introScreen = document.getElementById('intro-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const resultsScreen = document.getElementById('results-screen');
+    
+    const currentScenarioEl = document.getElementById('current-scenario');
+    const scenarioCategoryEl = document.getElementById('scenario-category');
+    const scenarioTitleEl = document.getElementById('scenario-title');
+    const scenarioDescriptionEl = document.getElementById('scenario-description');
+    const optionsContainer = document.getElementById('options-container');
+    
+    const feedbackCard = document.getElementById('feedback-card');
+    const feedbackIcon = document.getElementById('feedback-icon');
+    const feedbackTitle = document.getElementById('feedback-title');
+    const feedbackText = document.getElementById('feedback-text');
+    
+    const scoreDisplay = document.getElementById('score-display');
+    const batteryLevel = document.getElementById('battery-level');
+    const finalScore = document.getElementById('final-score');
+
+    function startGame() {
+      introScreen.classList.add('hidden');
+      gameScreen.classList.remove('hidden');
+      currentStep = 0;
+      score = 0;
+      battery = 100;
+      updateHUD();
+      loadScenario();
+    }
+
+    function updateHUD() {
+      scoreDisplay.textContent = score;
+      batteryLevel.textContent = battery + '%';
+    }
+
+    function loadScenario() {
+      feedbackCard.classList.add('hidden');
+      const data = scenarios[currentStep];
+      
+      currentScenarioEl.textContent = currentStep + 1;
+      scenarioCategoryEl.textContent = data.category;
+      scenarioTitleEl.textContent = data.title;
+      scenarioDescriptionEl.textContent = data.description;
+      
+      optionsContainer.innerHTML = '';
+      data.options.forEach((opt, index) => {
+        const btn = document.createElement('button');
+        btn.className = "w-full text-left bg-slate-800/80 hover:bg-slate-800 border border-slate-700 hover:border-sky-500/50 p-4 rounded-2xl transition duration-200 cursor-pointer text-sm md:text-base text-slate-200 flex items-start space-x-3";
+        btn.innerHTML = `<span class="bg-slate-700 text-sky-400 font-bold px-2.5 py-0.5 rounded-lg text-xs mt-0.5">${String.fromCharCode(65 + index)}</span><span class="flex-grow">${opt.text}</span>`;
+        btn.onclick = () => selectOption(opt);
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    function selectOption(option) {
+      // Disable all options buttons after choice
+      const buttons = optionsContainer.querySelectorAll('button');
+      buttons.forEach(b => b.disabled = true);
+
+      if (option.isCorrect) {
+        score += 100;
+        feedbackIcon.className = "fa-solid fa-circle-check text-emerald-400 mt-1";
+        feedbackCard.className = "bg-slate-900 border border-emerald-500/30 rounded-2xl p-6 shadow-xl transition-all";
+      } else {
+        battery = Math.max(10, battery - 20);
+        feedbackIcon.className = "fa-solid fa-triangle-exclamation text-rose-400 mt-1";
+        feedbackCard.className = "bg-slate-900 border border-rose-500/30 rounded-2xl p-6 shadow-xl transition-all";
+      }
+
+      feedbackTitle.textContent = option.feedbackTitle;
+      feedbackTitle.className = option.isCorrect ? "text-lg font-bold mb-1 text-emerald-400" : "text-lg font-bold mb-1 text-rose-400";
+      feedbackText.textContent = option.feedbackText;
+      
+      updateHUD();
+      feedbackCard.classList.remove('hidden');
+    }
+
+    function nextScenario() {
+      currentStep++;
+      if (currentStep < scenarios.length) {
+        loadScenario();
+      } else {
+        showResults();
+      }
+    }
+
+    function showResults() {
+      gameScreen.classList.add('hidden');
+      resultsScreen.classList.remove('hidden');
+      finalScore.textContent = score;
+    }
+
+    function restartGame() {
+      resultsScreen.classList.add('hidden');
+      introScreen.classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
