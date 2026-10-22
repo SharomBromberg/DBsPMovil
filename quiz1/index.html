@@ -9,69 +9,155 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    /* Touch optimization */
+    button, input { touch-action: manipulation; }
+    /* Custom scrollbar for leaderboard */
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); border-radius: 9999px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.25); border-radius: 9999px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(56, 189, 248, 0.5); }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-sky-500 selection:text-white">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-sky-500 selection:text-white antialiased overflow-x-hidden">
 
   <!-- Header -->
-  <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
-    <div class="flex items-center space-x-3">
-      <div class="bg-sky-500/10 border border-sky-500/30 p-2.5 rounded-xl text-sky-400">
-        <i class="fa-solid fa-database text-xl"></i>
+  <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-3 sm:px-6 py-3 transition-all">
+    <div class="max-w-4xl mx-auto flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+      
+      <!-- Brand & Module Info -->
+      <div class="flex items-center space-x-2.5 sm:space-x-3">
+        <div class="bg-sky-500/10 border border-sky-500/30 p-2 sm:p-2.5 rounded-xl text-sky-400 shrink-0">
+          <i class="fa-solid fa-database text-lg sm:text-xl"></i>
+        </div>
+        <div class="leading-tight">
+          <h1 class="text-sm sm:text-base md:text-lg font-bold text-white tracking-tight">Desafío: Arquitecto Offline</h1>
+          <p class="text-[11px] sm:text-xs text-slate-400">Módulo 1 • Bases de Datos Móviles</p>
+        </div>
       </div>
-      <div>
-        <h1 class="text-lg font-bold text-white tracking-tight">Desafío Móvil: Arquitecto Offline</h1>
-        <p class="text-xs text-slate-400">Módulo 1 • Bases de Datos para Apps Móviles</p>
-      </div>
-    </div>
-    <div class="flex items-center space-x-4">
-      <div class="bg-slate-800/80 border border-slate-700 px-4 py-2 rounded-xl flex items-center space-x-2">
-        <i class="fa-solid fa-battery-three-quarters text-emerald-400"></i>
-        <span class="text-xs font-semibold uppercase tracking-wider text-slate-300">Batería App: <span id="battery-level" class="text-emerald-400 font-bold">100%</span></span>
-      </div>
-      <div class="bg-sky-500/10 border border-sky-500/30 px-4 py-2 rounded-xl flex items-center space-x-2">
-        <i class="fa-solid fa-star text-amber-400"></i>
-        <span class="text-sm font-bold text-sky-300"><span id="score-display">0</span> Puntos</span>
+
+      <!-- Stats HUD & Actions -->
+      <div class="flex items-center space-x-2 sm:space-x-3 text-xs sm:text-sm">
+        
+        <!-- Active Player Chip (Hidden on intro) -->
+        <div id="player-hud" class="hidden bg-slate-800/90 border border-slate-700 px-2.5 py-1.5 rounded-xl items-center space-x-1.5 text-slate-200">
+          <i class="fa-solid fa-user text-sky-400 text-xs"></i>
+          <span id="player-hud-name" class="font-semibold max-w-[80px] sm:max-w-[120px] truncate text-xs"></span>
+        </div>
+
+        <!-- Battery -->
+        <div class="bg-slate-800/80 border border-slate-700 px-2.5 sm:px-3 py-1.5 rounded-xl flex items-center space-x-1.5">
+          <i class="fa-solid fa-battery-three-quarters text-emerald-400 text-xs sm:text-sm"></i>
+          <span class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-300">
+            <span class="hidden md:inline">Batería: </span><span id="battery-level" class="text-emerald-400 font-bold">100%</span>
+          </span>
+        </div>
+
+        <!-- Score -->
+        <div class="bg-sky-500/10 border border-sky-500/30 px-2.5 sm:px-3 py-1.5 rounded-xl flex items-center space-x-1.5">
+          <i class="fa-solid fa-star text-amber-400 text-xs sm:text-sm"></i>
+          <span class="text-xs sm:text-sm font-bold text-sky-300"><span id="score-display">0</span> <span class="hidden sm:inline">pts</span></span>
+        </div>
+
+        <!-- Leaderboard Trigger -->
+        <button onclick="openLeaderboardModal()" title="Ver tabla de posiciones" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-slate-700 p-2 sm:px-3 sm:py-1.5 rounded-xl text-amber-400 hover:text-amber-300 transition cursor-pointer flex items-center space-x-1.5">
+          <i class="fa-solid fa-trophy text-xs sm:text-sm"></i>
+          <span class="hidden md:inline text-xs font-semibold text-slate-200">Resultados</span>
+        </button>
+
       </div>
     </div>
   </header>
 
   <!-- Main Content Area -->
-  <main class="max-w-4xl w-full mx-auto p-6 my-auto">
+  <main class="max-w-4xl w-full mx-auto p-4 sm:p-6 my-auto">
     
-    <!-- Intro Screen -->
-    <div id="intro-screen" class="bg-slate-900 border border-slate-800 rounded-3xl p-8 md:p-12 text-center shadow-2xl relative overflow-hidden">
+    <!-- ==================== INTRO SCREEN ==================== -->
+    <div id="intro-screen" class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 md:p-12 text-center shadow-2xl relative overflow-hidden transition-all">
       <div class="absolute -right-20 -top-20 w-64 h-64 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
       <div class="absolute -left-20 -bottom-20 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div class="inline-flex p-4 bg-sky-500/10 border border-sky-500/20 text-sky-400 rounded-2xl text-3xl mb-6">
+      <!-- Hero Icon -->
+      <div class="inline-flex p-3.5 sm:p-4 bg-sky-500/10 border border-sky-500/20 text-sky-400 rounded-2xl text-2xl sm:text-3xl mb-4 sm:mb-6">
         <i class="fa-solid fa-mobile-screen-button"></i>
       </div>
 
-      <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-4">¡Salva la Experiencia del Usuario!</h2>
-      <p class="text-slate-400 text-base md:text-lg max-w-2xl mx-auto mb-8 leading-relaxed">
-        Eres el Arquitecto de Software Principal de una app móvil de logística de última milla. Te enfrentarás a caídas de red, clientes exigentes, esquemas rígidos y conflictos de sincronización. ¡Toma las decisiones técnicas correctas!
+      <h2 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white mb-3 tracking-tight">¡Salva la Experiencia del Usuario!</h2>
+      <p class="text-slate-400 text-sm sm:text-base md:text-lg max-w-2xl mx-auto mb-6 sm:mb-8 leading-relaxed">
+        Eres el Arquitecto de Software Principal de una app móvil de logística de última milla. Enfréntate a caídas de red, clientes exigentes, esquemas dinámicos y sincronización de datos.
       </p>
 
-      <button onclick="startGame()" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-8 py-4 rounded-2xl shadow-lg shadow-sky-500/20 transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer text-base inline-flex items-center space-x-3">
-        <span>Comenzar Misión</span>
-        <i class="fa-solid fa-arrow-right"></i>
-      </button>
+      <!-- Registration Form Card -->
+      <div class="max-w-md mx-auto bg-slate-950/80 border border-slate-800 p-5 sm:p-6 rounded-2xl mb-6 text-left shadow-lg">
+        <label for="player-name-input" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+          <i class="fa-solid fa-user-pen text-sky-400 mr-1.5"></i> Ingresa tu Nombre Completo
+        </label>
+        
+        <div class="relative">
+          <input 
+            type="text" 
+            id="player-name-input" 
+            placeholder="Ej: Laura Sofía Martínez" 
+            maxlength="40"
+            autocomplete="name"
+            class="w-full bg-slate-900 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 rounded-xl px-4 py-3 text-sm sm:text-base text-white placeholder-slate-500 outline-none transition duration-200"
+            onkeydown="if(event.key === 'Enter') startGame()"
+          />
+        </div>
+
+        <!-- Inline Error Alert -->
+        <div id="name-error-box" class="hidden mt-3 p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-start space-x-2 text-rose-400 text-xs sm:text-sm">
+          <i class="fa-solid fa-circle-exclamation mt-0.5 shrink-0"></i>
+          <span id="name-error-message"></span>
+        </div>
+
+        <p class="text-slate-500 text-xs mt-2.5 flex items-center">
+          <i class="fa-solid fa-shield-halved text-slate-400 mr-1.5"></i>
+          <span>El nombre no se puede repetir con el de participantes anteriores.</span>
+        </p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-col sm:flex-row justify-center items-center gap-3">
+        <button 
+          onclick="startGame()" 
+          class="w-full sm:w-auto bg-sky-500 hover:bg-sky-400 active:bg-sky-600 text-slate-950 font-bold px-8 py-3.5 sm:py-4 rounded-2xl shadow-lg shadow-sky-500/20 transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer text-sm sm:text-base inline-flex items-center justify-center space-x-2.5">
+          <span>Comenzar Misión</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+
+        <button 
+          onclick="openLeaderboardModal()" 
+          class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 active:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white font-semibold px-6 py-3.5 sm:py-4 rounded-2xl transition cursor-pointer text-sm sm:text-base inline-flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-trophy text-amber-400"></i>
+          <span>Ver Resultados (<span id="intro-registered-count">0</span>)</span>
+        </button>
+      </div>
+
     </div>
 
-    <!-- Game Screen (Hidden by default) -->
-    <div id="game-screen" class="hidden space-y-6">
+    <!-- ==================== GAME SCREEN ==================== -->
+    <div id="game-screen" class="hidden space-y-4 sm:space-y-6">
       
-      <!-- Progress & Scenario Info -->
-      <div class="flex justify-between items-center text-sm font-medium text-slate-400 px-2">
-        <span>Escenario <span id="current-scenario" class="text-sky-400 font-bold">1</span> de 5</span>
-        <span id="scenario-category" class="bg-slate-800 border border-slate-700 px-3 py-1 rounded-lg text-xs text-sky-300">Almacenamiento Local</span>
+      <!-- Progress Bar & Scenario Info -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg space-y-3">
+        <div class="flex justify-between items-center text-xs sm:text-sm font-medium text-slate-400">
+          <span class="flex items-center gap-2">
+            <span class="inline-block w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+            Escenario <span id="current-scenario" class="text-sky-400 font-bold">1</span> de 5
+          </span>
+          <span id="scenario-category" class="bg-slate-800 border border-slate-700 px-3 py-1 rounded-lg text-xs text-sky-300 font-semibold">Almacenamiento Local</span>
+        </div>
+
+        <!-- Visual Progress Bar -->
+        <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+          <div id="progress-bar-fill" class="bg-sky-500 h-full rounded-full transition-all duration-500" style="width: 20%;"></div>
+        </div>
       </div>
 
       <!-- Scenario Card -->
-      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl">
-        <h3 id="scenario-title" class="text-xl md:text-2xl font-bold text-white mb-3">Título del escenario</h3>
-        <p id="scenario-description" class="text-slate-300 text-base leading-relaxed mb-6">Descripción detallada del reto técnico actual...</p>
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-7 md:p-8 shadow-xl">
+        <h3 id="scenario-title" class="text-lg sm:text-xl md:text-2xl font-bold text-white mb-3">Título del escenario</h3>
+        <p id="scenario-description" class="text-slate-300 text-sm sm:text-base leading-relaxed mb-6">Descripción detallada del reto técnico actual...</p>
 
         <!-- Options Container -->
         <div id="options-container" class="space-y-3">
@@ -80,16 +166,19 @@
       </div>
 
       <!-- Feedback Banner (Hidden by default) -->
-      <div id="feedback-card" class="hidden bg-slate-900 border rounded-2xl p-6 shadow-xl transition-all">
-        <div class="flex items-start space-x-4">
-          <div id="feedback-icon" class="text-2xl mt-1"></div>
+      <div id="feedback-card" class="hidden bg-slate-900 border rounded-2xl p-5 sm:p-6 shadow-xl transition-all">
+        <div class="flex items-start space-x-3 sm:space-x-4">
+          <div id="feedback-icon" class="text-2xl mt-1 shrink-0"></div>
           <div class="flex-grow">
-            <h4 id="feedback-title" class="text-lg font-bold mb-1"></h4>
-            <p id="feedback-text" class="text-slate-300 text-sm leading-relaxed"></p>
+            <h4 id="feedback-title" class="text-base sm:text-lg font-bold mb-1"></h4>
+            <p id="feedback-text" class="text-slate-300 text-xs sm:text-sm leading-relaxed"></p>
           </div>
         </div>
-        <div class="mt-6 flex justify-end">
-          <button onclick="nextScenario()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-semibold px-6 py-2.5 rounded-xl transition cursor-pointer inline-flex items-center space-x-2">
+        <div class="mt-5 flex justify-end">
+          <button 
+            id="next-btn"
+            onclick="nextScenario()" 
+            class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-slate-700 text-white font-semibold px-6 py-3 rounded-xl transition cursor-pointer inline-flex items-center justify-center space-x-2">
             <span>Siguiente Reto</span>
             <i class="fa-solid fa-chevron-right text-xs"></i>
           </button>
@@ -98,34 +187,154 @@
 
     </div>
 
-    <!-- Victory / Results Screen (Hidden by default) -->
-    <div id="results-screen" class="hidden bg-slate-900 border border-slate-800 rounded-3xl p-8 md:p-12 text-center shadow-2xl">
-      <div id="result-icon" class="text-5xl text-amber-400 mb-6">
-        <i class="fa-solid fa-trophy"></i>
-      </div>
-      <h2 id="result-title" class="text-3xl font-extrabold text-white mb-3">¡Misión Cumplida!</h2>
-      <p id="result-description" class="text-slate-300 text-base max-w-xl mx-auto mb-8 leading-relaxed">Has completado con éxito la evaluación arquitectónica del Módulo 1.</p>
+    <!-- ==================== RESULTS / VICTORY SCREEN ==================== -->
+    <div id="results-screen" class="hidden space-y-6">
       
-      <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 max-w-sm mx-auto mb-8">
-        <div class="text-sm text-slate-400 mb-1">Puntuación Final</div>
-        <div class="text-4xl font-extrabold text-sky-400"><span id="final-score">0</span> <span class="text-lg text-slate-500">/ 500 pts</span></div>
+      <!-- Summary Hero Card -->
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 md:p-10 text-center shadow-2xl relative overflow-hidden">
+        <div class="absolute -right-20 -top-20 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div id="result-icon" class="text-4xl sm:text-5xl text-amber-400 mb-4 inline-block">
+          <i class="fa-solid fa-trophy"></i>
+        </div>
+        
+        <h2 id="result-title" class="text-2xl sm:text-3xl font-extrabold text-white mb-2">¡Misión Cumplida!</h2>
+        <p id="result-player-greeting" class="text-sky-400 font-semibold text-base sm:text-lg mb-1"></p>
+        <p id="result-description" class="text-slate-300 text-xs sm:text-sm max-w-xl mx-auto mb-6 leading-relaxed">
+          Has completado la evaluación arquitectónica del Módulo 1: Bases de Datos para Apps Móviles.
+        </p>
+        
+        <!-- Score & Stats Badges -->
+        <div class="grid grid-cols-3 gap-2 sm:gap-4 max-w-lg mx-auto mb-6">
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3 sm:p-4">
+            <div class="text-[11px] sm:text-xs text-slate-400 mb-1">Puntaje</div>
+            <div class="text-xl sm:text-2xl font-extrabold text-sky-400"><span id="final-score">0</span></div>
+            <div class="text-[10px] sm:text-xs text-slate-500">de 500 pts</div>
+          </div>
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3 sm:p-4">
+            <div class="text-[11px] sm:text-xs text-slate-400 mb-1">Aciertos</div>
+            <div class="text-xl sm:text-2xl font-extrabold text-emerald-400"><span id="final-correct">0</span> / 5</div>
+            <div class="text-[10px] sm:text-xs text-slate-500" id="final-accuracy">0%</div>
+          </div>
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3 sm:p-4">
+            <div class="text-[11px] sm:text-xs text-slate-400 mb-1">Batería Final</div>
+            <div class="text-xl sm:text-2xl font-extrabold text-amber-400"><span id="final-battery">100</span>%</div>
+            <div class="text-[10px] sm:text-xs text-slate-500">Eficiencia</div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap justify-center gap-3">
+          <button 
+            onclick="restartGame()" 
+            class="bg-sky-500 hover:bg-sky-400 active:bg-sky-600 text-slate-950 font-bold px-6 py-3 rounded-2xl transition cursor-pointer text-sm inline-flex items-center space-x-2">
+            <i class="fa-solid fa-user-plus"></i>
+            <span>Nuevo Participante</span>
+          </button>
+
+          <button 
+            onclick="exportResultsCSV()" 
+            class="bg-slate-800 hover:bg-slate-700 active:bg-slate-750 border border-slate-700 text-slate-200 font-semibold px-5 py-3 rounded-2xl transition cursor-pointer text-sm inline-flex items-center space-x-2">
+            <i class="fa-solid fa-file-csv text-emerald-400"></i>
+            <span>Descargar CSV</span>
+          </button>
+        </div>
       </div>
 
-      <button onclick="restartGame()" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-8 py-3.5 rounded-2xl transition cursor-pointer inline-flex items-center space-x-2">
-        <i class="fa-solid fa-rotate-right"></i>
-        <span>Jugar de Nuevo</span>
-      </button>
+      <!-- Inline Leaderboard on Results Screen -->
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-7 shadow-xl">
+        <div class="flex flex-wrap justify-between items-center gap-3 mb-5">
+          <div>
+            <h3 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-ranking-star text-amber-400"></i>
+              <span>Resultados de Todos los Participantes</span>
+            </h3>
+            <p class="text-xs text-slate-400">Historial de quienes han presentado esta evaluación en este dispositivo</p>
+          </div>
+          <span class="bg-slate-800 text-sky-400 font-bold px-3 py-1 rounded-xl text-xs border border-slate-700">
+            Total: <span id="results-inline-count">0</span>
+          </span>
+        </div>
+
+        <!-- Results List Container -->
+        <div id="results-inline-list" class="space-y-2.5 max-h-[420px] overflow-y-auto custom-scrollbar pr-1">
+          <!-- Populated by JavaScript -->
+        </div>
+      </div>
+
     </div>
 
   </main>
 
+  <!-- ==================== LEADERBOARD MODAL ==================== -->
+  <div id="leaderboard-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      
+      <!-- Modal Header -->
+      <div class="p-4 sm:p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+        <div class="flex items-center space-x-3">
+          <div class="bg-amber-500/10 border border-amber-500/20 p-2 sm:p-2.5 rounded-xl text-amber-400">
+            <i class="fa-solid fa-trophy text-lg"></i>
+          </div>
+          <div>
+            <h3 class="text-base sm:text-lg font-bold text-white">Tabla de Posiciones y Resultados</h3>
+            <p class="text-xs text-slate-400">Participantes registrados y calificaciones</p>
+          </div>
+        </div>
+        <button onclick="closeLeaderboardModal()" class="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition cursor-pointer">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Search & Filters -->
+      <div class="p-4 sm:p-5 border-b border-slate-800 bg-slate-950/40 flex flex-col sm:flex-row gap-2.5">
+        <div class="relative flex-grow">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-500 text-xs"></i>
+          <input 
+            type="text" 
+            id="modal-search-input" 
+            placeholder="Buscar participante por nombre..." 
+            oninput="filterModalResults(this.value)"
+            class="w-full bg-slate-900 border border-slate-700 focus:border-sky-500 rounded-xl pl-9 pr-4 py-2 text-xs sm:text-sm text-white placeholder-slate-500 outline-none transition"
+          />
+        </div>
+        <button onclick="exportResultsCSV()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 transition cursor-pointer">
+          <i class="fa-solid fa-file-arrow-down text-emerald-400"></i>
+          <span>Exportar CSV</span>
+        </button>
+        <button onclick="promptClearResults()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 transition cursor-pointer">
+          <i class="fa-solid fa-trash-can"></i>
+          <span>Limpiar</span>
+        </button>
+      </div>
+
+      <!-- Modal Body / Records List -->
+      <div id="modal-records-container" class="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-grow space-y-2.5">
+        <!-- Injected via JavaScript -->
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-3.5 sm:p-4 border-t border-slate-800 bg-slate-900/50 flex justify-between items-center text-xs text-slate-400">
+        <span>Total: <strong id="modal-total-count" class="text-sky-400">0</strong> participantes</span>
+        <button onclick="closeLeaderboardModal()" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl transition cursor-pointer font-medium">
+          Cerrar
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Footer -->
-  <footer class="text-center py-4 text-xs text-slate-500 border-t border-slate-900">
+  <footer class="text-center py-4 px-4 text-xs text-slate-500 border-t border-slate-900">
     Desafío Educativo Interactivo • Módulo 1: Bases de Datos para Aplicaciones Móviles
   </footer>
 
   <!-- Game Logic Script -->
   <script>
+    // Storage Key
+    const STORAGE_KEY = 'desafio_movil_arquitecto_results_v1';
+
+    // Scenarios Bank
     const scenarios = [
       {
         category: "Almacenamiento Local",
@@ -170,10 +379,10 @@
             feedbackText: "¡Exacto! El modelo NoSQL basado en documentos JSON permite evolucionar los atributos bajo demanda de forma fluida, eliminando costosas migraciones de esquemas."
           },
           {
-            text: "Guardar todo el perfil de usuario comprimido en un archivo de texto plano plano plano.",
+            text: "Guardar todo el perfil de usuario comprimido en un archivo de texto plano plano.",
             isCorrect: false,
             feedbackTitle: "Pérdida de consultas estructuradas",
-            feedbackText: "Los archivos de texto plano carecen de índices, consultas rápidas (SQL o API de consultas) y transacciones seguras requeridas a escala empresarial."
+            feedbackText: "Los archivos de texto plano carecen de índices, consultas rápidas y transacciones seguras requeridas a escala empresarial."
           }
         ]
       },
@@ -254,19 +463,30 @@
       }
     ];
 
+    // State
     let currentStep = 0;
     let score = 0;
     let battery = 100;
+    let currentParticipantName = '';
 
+    // DOM Elements
     const introScreen = document.getElementById('intro-screen');
     const gameScreen = document.getElementById('game-screen');
     const resultsScreen = document.getElementById('results-screen');
     
+    const playerNameInput = document.getElementById('player-name-input');
+    const nameErrorBox = document.getElementById('name-error-box');
+    const nameErrorMessage = document.getElementById('name-error-message');
+    const introRegisteredCount = document.getElementById('intro-registered-count');
+
+    const playerHud = document.getElementById('player-hud');
+    const playerHudName = document.getElementById('player-hud-name');
     const currentScenarioEl = document.getElementById('current-scenario');
     const scenarioCategoryEl = document.getElementById('scenario-category');
     const scenarioTitleEl = document.getElementById('scenario-title');
     const scenarioDescriptionEl = document.getElementById('scenario-description');
     const optionsContainer = document.getElementById('options-container');
+    const progressBarFill = document.getElementById('progress-bar-fill');
     
     const feedbackCard = document.getElementById('feedback-card');
     const feedbackIcon = document.getElementById('feedback-icon');
@@ -275,21 +495,121 @@
     
     const scoreDisplay = document.getElementById('score-display');
     const batteryLevel = document.getElementById('battery-level');
+    
+    const resultPlayerGreeting = document.getElementById('result-player-greeting');
     const finalScore = document.getElementById('final-score');
+    const finalCorrect = document.getElementById('final-correct');
+    const finalAccuracy = document.getElementById('final-accuracy');
+    const finalBattery = document.getElementById('final-battery');
+    const resultsInlineCount = document.getElementById('results-inline-count');
+    const resultsInlineList = document.getElementById('results-inline-list');
 
+    const leaderboardModal = document.getElementById('leaderboard-modal');
+    const modalRecordsContainer = document.getElementById('modal-records-container');
+    const modalTotalCount = document.getElementById('modal-total-count');
+    const modalSearchInput = document.getElementById('modal-search-input');
+
+    // ==================== STORAGE FUNCTIONS ====================
+    function getStoredResults() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        console.error("Error reading localStorage", e);
+        return [];
+      }
+    }
+
+    function saveResultsToStorage(records) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+      } catch (e) {
+        console.error("Error writing localStorage", e);
+      }
+    }
+
+    function isNameTaken(name) {
+      const records = getStoredResults();
+      const normalized = name.trim().toLowerCase();
+      return records.some(r => r.name.trim().toLowerCase() === normalized);
+    }
+
+    function updateRegisteredCountUI() {
+      const count = getStoredResults().length;
+      if (introRegisteredCount) introRegisteredCount.textContent = count;
+      if (modalTotalCount) modalTotalCount.textContent = count;
+      if (resultsInlineCount) resultsInlineCount.textContent = count;
+    }
+
+    // ==================== NAME VALIDATION ====================
+    function showNameError(msg) {
+      nameErrorMessage.textContent = msg;
+      nameErrorBox.classList.remove('hidden');
+      playerNameInput.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/20');
+      playerNameInput.focus();
+    }
+
+    function clearNameError() {
+      nameErrorBox.classList.add('hidden');
+      playerNameInput.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/20');
+    }
+
+    playerNameInput.addEventListener('input', () => {
+      clearNameError();
+    });
+
+    // ==================== GAME FLOW ====================
     function startGame() {
-      introScreen.classList.add('hidden');
-      gameScreen.classList.remove('hidden');
+      const enteredName = playerNameInput.value.trim();
+
+      if (!enteredName) {
+        showNameError("Por favor ingresa tu nombre para comenzar la evaluación.");
+        return;
+      }
+
+      if (enteredName.length < 3) {
+        showNameError("El nombre debe tener al menos 3 caracteres.");
+        return;
+      }
+
+      if (isNameTaken(enteredName)) {
+        showNameError(`El nombre "${enteredName}" ya fue registrado. Por favor agrega tu apellido o usa un nombre distintivo.`);
+        return;
+      }
+
+      currentParticipantName = enteredName;
+
+      // Update HUD
+      playerHudName.textContent = currentParticipantName;
+      playerHud.classList.remove('hidden');
+      playerHud.classList.add('flex');
+
+      // Reset state
       currentStep = 0;
       score = 0;
       battery = 100;
       updateHUD();
+
+      // Switch screen
+      introScreen.classList.add('hidden');
+      resultsScreen.classList.add('hidden');
+      gameScreen.classList.remove('hidden');
+
       loadScenario();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function updateHUD() {
       scoreDisplay.textContent = score;
       batteryLevel.textContent = battery + '%';
+
+      if (battery <= 40) {
+        batteryLevel.className = "text-rose-400 font-bold";
+      } else if (battery <= 70) {
+        batteryLevel.className = "text-amber-400 font-bold";
+      } else {
+        batteryLevel.className = "text-emerald-400 font-bold";
+      }
     }
 
     function loadScenario() {
@@ -300,44 +620,65 @@
       scenarioCategoryEl.textContent = data.category;
       scenarioTitleEl.textContent = data.title;
       scenarioDescriptionEl.textContent = data.description;
+
+      // Update progress bar
+      const progressPercent = ((currentStep + 1) / scenarios.length) * 100;
+      progressBarFill.style.width = progressPercent + '%';
       
       optionsContainer.innerHTML = '';
       data.options.forEach((opt, index) => {
         const btn = document.createElement('button');
-        btn.className = "w-full text-left bg-slate-800/80 hover:bg-slate-800 border border-slate-700 hover:border-sky-500/50 p-4 rounded-2xl transition duration-200 cursor-pointer text-sm md:text-base text-slate-200 flex items-start space-x-3";
-        btn.innerHTML = `<span class="bg-slate-700 text-sky-400 font-bold px-2.5 py-0.5 rounded-lg text-xs mt-0.5">${String.fromCharCode(65 + index)}</span><span class="flex-grow">${opt.text}</span>`;
-        btn.onclick = () => selectOption(opt);
+        btn.className = "w-full text-left bg-slate-800/80 hover:bg-slate-800 active:bg-slate-750 border border-slate-700 hover:border-sky-500/50 p-4 rounded-2xl transition duration-200 cursor-pointer text-xs sm:text-sm md:text-base text-slate-200 flex items-start space-x-3";
+        btn.innerHTML = `
+          <span class="bg-slate-700 text-sky-400 font-bold px-2.5 py-1 rounded-lg text-xs mt-0.5 shrink-0">${String.fromCharCode(65 + index)}</span>
+          <span class="flex-grow leading-snug">${opt.text}</span>
+        `;
+        btn.onclick = () => selectOption(opt, btn);
         optionsContainer.appendChild(btn);
       });
     }
 
-    function selectOption(option) {
+    function selectOption(option, selectedBtn) {
       // Disable all options buttons after choice
       const buttons = optionsContainer.querySelectorAll('button');
-      buttons.forEach(b => b.disabled = true);
+      buttons.forEach(b => {
+        b.disabled = true;
+        b.classList.remove('hover:border-sky-500/50', 'cursor-pointer');
+        b.classList.add('cursor-default', 'opacity-70');
+      });
+
+      selectedBtn.classList.remove('opacity-70');
 
       if (option.isCorrect) {
         score += 100;
+        selectedBtn.classList.add('border-emerald-500', 'bg-emerald-500/10');
         feedbackIcon.className = "fa-solid fa-circle-check text-emerald-400 mt-1";
-        feedbackCard.className = "bg-slate-900 border border-emerald-500/30 rounded-2xl p-6 shadow-xl transition-all";
+        feedbackCard.className = "bg-slate-900 border border-emerald-500/40 rounded-2xl p-5 sm:p-6 shadow-xl transition-all";
       } else {
         battery = Math.max(10, battery - 20);
+        selectedBtn.classList.add('border-rose-500', 'bg-rose-500/10');
         feedbackIcon.className = "fa-solid fa-triangle-exclamation text-rose-400 mt-1";
-        feedbackCard.className = "bg-slate-900 border border-rose-500/30 rounded-2xl p-6 shadow-xl transition-all";
+        feedbackCard.className = "bg-slate-900 border border-rose-500/40 rounded-2xl p-5 sm:p-6 shadow-xl transition-all";
       }
 
       feedbackTitle.textContent = option.feedbackTitle;
-      feedbackTitle.className = option.isCorrect ? "text-lg font-bold mb-1 text-emerald-400" : "text-lg font-bold mb-1 text-rose-400";
+      feedbackTitle.className = option.isCorrect ? "text-base sm:text-lg font-bold mb-1 text-emerald-400" : "text-base sm:text-lg font-bold mb-1 text-rose-400";
       feedbackText.textContent = option.feedbackText;
       
       updateHUD();
       feedbackCard.classList.remove('hidden');
+
+      // Scroll smoothly to feedback if on mobile
+      setTimeout(() => {
+        feedbackCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 100);
     }
 
     function nextScenario() {
       currentStep++;
       if (currentStep < scenarios.length) {
         loadScenario();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         showResults();
       }
@@ -346,13 +687,222 @@
     function showResults() {
       gameScreen.classList.add('hidden');
       resultsScreen.classList.remove('hidden');
+      playerHud.classList.add('hidden');
+
+      const correctCount = Math.round(score / 100);
+      const accuracy = Math.round((correctCount / scenarios.length) * 100);
+
+      // Save record to localStorage
+      const now = new Date();
+      const formattedDate = now.toLocaleDateString('es-CO', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      const newRecord = {
+        id: 'rec_' + Date.now(),
+        name: currentParticipantName,
+        score: score,
+        correctCount: correctCount,
+        accuracy: accuracy,
+        battery: battery,
+        date: formattedDate,
+        timestamp: Date.now()
+      };
+
+      const records = getStoredResults();
+      records.push(newRecord);
+      saveResultsToStorage(records);
+
+      // Populate results UI
+      resultPlayerGreeting.textContent = `¡Excelente trabajo, ${currentParticipantName}!`;
       finalScore.textContent = score;
+      finalCorrect.textContent = correctCount;
+      finalAccuracy.textContent = `${accuracy}% precisión`;
+      finalBattery.textContent = battery;
+
+      updateRegisteredCountUI();
+      renderResultsList(resultsInlineList, records, currentParticipantName);
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function restartGame() {
+      currentParticipantName = '';
+      playerNameInput.value = '';
+      clearNameError();
+      updateRegisteredCountUI();
+
+      playerHud.classList.add('hidden');
       resultsScreen.classList.add('hidden');
+      gameScreen.classList.add('hidden');
       introScreen.classList.remove('hidden');
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => playerNameInput.focus(), 200);
     }
+
+    // ==================== LEADERBOARD RENDERING ====================
+    function renderResultsList(container, records, highlightName = '') {
+      if (!container) return;
+      
+      if (!records || records.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 text-slate-500">
+            <i class="fa-solid fa-users-slash text-3xl mb-2 text-slate-600 block"></i>
+            <p class="text-xs sm:text-sm">Aún no hay resultados registrados.</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Sort descending: by Score, then by Battery, then by Timestamp (earliest first)
+      const sorted = [...records].sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        if (b.battery !== a.battery) return b.battery - a.battery;
+        return a.timestamp - b.timestamp;
+      });
+
+      container.innerHTML = sorted.map((item, index) => {
+        const isCurrent = highlightName && item.name.toLowerCase() === highlightName.toLowerCase();
+        
+        // Medals
+        let rankBadge = `<span class="font-bold text-slate-400 text-xs sm:text-sm w-6 text-center">#${index + 1}</span>`;
+        if (index === 0) rankBadge = `<span class="text-base sm:text-lg text-amber-400 w-6 text-center" title="1er Lugar">🥇</span>`;
+        else if (index === 1) rankBadge = `<span class="text-base sm:text-lg text-slate-300 w-6 text-center" title="2do Lugar">🥈</span>`;
+        else if (index === 2) rankBadge = `<span class="text-base sm:text-lg text-amber-600 w-6 text-center" title="3er Lugar">🥉</span>`;
+
+        return `
+          <div class="p-3 sm:p-4 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+            isCurrent 
+              ? 'bg-sky-500/10 border-sky-500/40 ring-1 ring-sky-500/30' 
+              : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
+          }">
+            
+            <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+              ${rankBadge}
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="font-bold text-xs sm:text-sm text-white truncate max-w-[140px] sm:max-w-[220px]">
+                    ${escapeHTML(item.name)}
+                  </span>
+                  ${isCurrent ? '<span class="bg-sky-500 text-slate-950 text-[10px] font-extrabold px-1.5 py-0.2 rounded-md">TÚ</span>' : ''}
+                </div>
+                <div class="text-[10px] sm:text-xs text-slate-400 flex items-center gap-2 mt-0.5">
+                  <span><i class="fa-regular fa-clock text-slate-500 mr-1"></i>${item.date}</span>
+                  <span>•</span>
+                  <span><i class="fa-solid fa-battery-half text-slate-500 mr-1"></i>${item.battery}% bat</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-right shrink-0">
+              <div class="text-sm sm:text-base font-extrabold text-sky-400">${item.score} <span class="text-[10px] text-slate-500 font-normal">pts</span></div>
+              <div class="text-[10px] sm:text-xs text-emerald-400 font-medium">${item.correctCount || Math.round(item.score/100)}/5 aciertos</div>
+            </div>
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    function escapeHTML(str) {
+      return str.replace(/[&<>'"]/g, 
+        tag => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          "'": '&#39;',
+          '"': '&quot;'
+        }[tag] || tag)
+      );
+    }
+
+    // ==================== MODAL LEADERBOARD ====================
+    function openLeaderboardModal() {
+      const records = getStoredResults();
+      modalSearchInput.value = '';
+      renderResultsList(modalRecordsContainer, records, currentParticipantName);
+      updateRegisteredCountUI();
+      leaderboardModal.classList.remove('hidden');
+    }
+
+    function closeLeaderboardModal() {
+      leaderboardModal.classList.add('hidden');
+    }
+
+    // Close on clicking backdrop
+    leaderboardModal.addEventListener('click', (e) => {
+      if (e.target === leaderboardModal) closeLeaderboardModal();
+    });
+
+    function filterModalResults(query) {
+      const records = getStoredResults();
+      const term = query.trim().toLowerCase();
+      const filtered = records.filter(r => r.name.toLowerCase().includes(term));
+      renderResultsList(modalRecordsContainer, filtered, currentParticipantName);
+    }
+
+    function promptClearResults() {
+      const total = getStoredResults().length;
+      if (total === 0) {
+        alert("No hay registros para borrar.");
+        return;
+      }
+      
+      const confirmDelete = confirm(`¿Estás seguro de que deseas eliminar los ${total} resultados registrados? Esta acción no se puede deshacer.`);
+      if (confirmDelete) {
+        localStorage.removeItem(STORAGE_KEY);
+        updateRegisteredCountUI();
+        renderResultsList(modalRecordsContainer, []);
+        renderResultsList(resultsInlineList, []);
+        alert("Todos los resultados han sido borrados con éxito.");
+      }
+    }
+
+    // ==================== EXPORT TO CSV ====================
+    function exportResultsCSV() {
+      const records = getStoredResults();
+      if (records.length === 0) {
+        alert("No hay resultados registrados para exportar.");
+        return;
+      }
+
+      // Sort records
+      const sorted = [...records].sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        if (b.battery !== a.battery) return b.battery - a.battery;
+        return a.timestamp - b.timestamp;
+      });
+
+      // CSV Header & Rows with BOM for Excel UTF-8 compatibility
+      let csvContent = '\uFEFF';
+      csvContent += "Posición,Nombre del Participante,Puntaje,Aciertos,Batería Restante,Fecha de Presentación\n";
+
+      sorted.forEach((item, index) => {
+        const cleanName = `"${item.name.replace(/"/g, '""')}"`;
+        const correct = item.correctCount || Math.round(item.score / 100);
+        csvContent += `${index + 1},${cleanName},${item.score},${correct}/5,${item.battery}%,${item.date}\n`;
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Resultados_Desafio_Movil_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    // Initialize counts on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      updateRegisteredCountUI();
+    });
   </script>
 </body>
 </html>
